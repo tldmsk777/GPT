@@ -15,6 +15,17 @@ const initialForm: BirthInput = {
   nickname: "",
 };
 
+const HOURS = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, "0"));
+const MINUTES = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, "0"));
+
+const splitTime = (time?: string) => {
+  if (!time || !time.includes(":")) {
+    return { hour: "", minute: "" };
+  }
+  const [hour, minute] = time.split(":");
+  return { hour, minute };
+};
+
 export default function SajuPage() {
   const cached = useMemo(() => readBirthProfile() ?? initialForm, []);
   const [form, setForm] = useState<BirthInput>(cached);
@@ -22,9 +33,18 @@ export default function SajuPage() {
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const hasKey = Boolean(readApiKey());
+  const timeParts = splitTime(form.birthTime);
 
   const update = <K extends keyof BirthInput>(key: K, value: BirthInput[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const updateBirthTime = (hour: string, minute: string) => {
+    if (!hour || !minute) {
+      update("birthTime", "");
+      return;
+    }
+    update("birthTime", `${hour}:${minute}`);
   };
 
   const submit = async (e: FormEvent) => {
@@ -59,10 +79,43 @@ export default function SajuPage() {
         <label className="text-sm">생년월일
           <input className="mt-1 w-full rounded border px-3 py-2" type="date" value={form.birthDate} onChange={(e) => update("birthDate", e.target.value)} required />
         </label>
-        <label className="text-sm">출생시간
-          <input className="mt-1 w-full rounded border px-3 py-2" type="time" value={form.birthTime} onChange={(e) => update("birthTime", e.target.value)} disabled={form.unknownBirthTime} />
-        </label>
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.unknownBirthTime} onChange={(e) => update("unknownBirthTime", e.target.checked)} />출생시간 모름</label>
+        <div className="text-sm">
+          <p>출생시간</p>
+          <div className="mt-1 flex gap-2">
+            <select
+              className="w-full rounded border px-3 py-2"
+              value={timeParts.hour}
+              disabled={form.unknownBirthTime}
+              onChange={(e) => updateBirthTime(e.target.value, timeParts.minute)}
+            >
+              <option value="">시</option>
+              {HOURS.map((hour) => (
+                <option key={hour} value={hour}>
+                  {hour}
+                </option>
+              ))}
+            </select>
+            <select
+              className="w-full rounded border px-3 py-2"
+              value={timeParts.minute}
+              disabled={form.unknownBirthTime}
+              onChange={(e) => updateBirthTime(timeParts.hour, e.target.value)}
+            >
+              <option value="">분</option>
+              {MINUTES.map((minute) => (
+                <option key={minute} value={minute}>
+                  {minute}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.unknownBirthTime} onChange={(e) => {
+          update("unknownBirthTime", e.target.checked);
+          if (e.target.checked) {
+            update("birthTime", "");
+          }
+        }} />출생시간 모름</label>
         <label className="text-sm">성별
           <select className="mt-1 w-full rounded border px-3 py-2" value={form.gender} onChange={(e) => update("gender", e.target.value as BirthInput["gender"])}>
             <option>남</option><option>여</option><option>기타</option><option>응답 안 함</option>
