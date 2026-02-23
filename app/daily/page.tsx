@@ -105,7 +105,7 @@ export default function DailyPage() {
             </select>
           </div>
         </div>
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.unknownBirthTime} onChange={(e) => setForm({ ...form, unknownBirthTime: e.target.checked, birthTime: e.target.checked ? "" : form.birthTime })} />출생시간 모름</label>
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.unknownBirthTime} onChange={(e) => setForm((prev) => ({ ...prev, unknownBirthTime: e.target.checked, birthTime: e.target.checked ? "" : prev.birthTime }))} />출생시간 모름</label>
         <label className="text-sm">성별
           <select className="mt-1 w-full rounded border px-3 py-2" value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value as BirthInput["gender"] })}>
             <option>남</option><option>여</option><option>기타</option><option>응답 안 함</option>
